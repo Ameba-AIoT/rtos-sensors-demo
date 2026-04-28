@@ -11,18 +11,27 @@ This repository brings together multiple **I2C-based sensor examples**, making i
 
 These examples were originally maintained in separate standalone repositories and are now consolidated into a single repository as a standardized demo collection for easier maintenance and reuse.
 
+
 > 📘 Each subdirectory is a complete standalone project that can be built and run independently.  
 > Each `xxx_demo` folder includes its own documentation, such as `README.md` or `README_CN.md`, covering features, hardware setup, build steps, and sample logs.
+
 
 ---
 
 ## 📎 Related Links
+- **Repository mirrors**   
+   - [Gitee Repository](https://gitee.com/ameba-aiot/rtos-sensors-demo)
+
+- **Ameba AIoT SDK**
+   - [SDK Repository](https://github.com/Ameba-AIoT/ameba-rtos)
 
 - **EVB purchase links**
   - [🛒 Taobao](https://item.taobao.com/item.htm?id=904981157046)
   - [📦 Amazon](https://www.amazon.com/-/zh/dp/B0FB33DT2C/)
+
 - **Chip information**
   - [📄 RTL8721Dx product page](https://aiot.realmcu.com/zh/module/rtl8721dx.html)
+
 - **Development documents**
   - [📚 I2C documentation ](https://aiot.realmcu.com/zh/latest/rtos/peripherals/i2c/index.html)
 
