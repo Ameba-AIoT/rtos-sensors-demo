@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Checkout SDK repository
+      uses: actions/checkout@v2
+      with:
+        repository: Ameba-AIoT/ameba-rtos
+        path: ameba-rtos
+
+    - name: SDK environment        
+            
+      shell: bash
+      run: |
+          REPO_NAME=$(echo "${{ github.repository }}" | awk -F'/' '{print $2}')
+          pwd 
+          ls -al
+          ls -al  ${{github.workspace}}/ameba-rtos         
+         
+          sudo ln -sf /bin/bash /bin/sh
+
+          #check soc_info.json and bin file in the repo root dir
+          SOC_JSON=$(find ./ -maxdepth 1 -type f -name "soc_info.json" | head -n 1)
+          APP_BIN=$(find ./ -maxdepth 1 -type f -name "km0_km4_app.bin" | head -n 1)
+          BOOT_BIN=$(find ./ -maxdepth 1 -type f -name "km4_boot_all.bin" | head -n 1)
+          if [[ -z "$SOC_JSON" || -z "$APP_BIN" || -z "$BOOT_BIN" ]]; then
+          echo "Git push files are incomplete.Please check your original respository workspace files!"
+          exit 1
+          fi
+
+          # pre-build venv          
+          sudo apt-get update -qq
+          sudo apt-get install -y cmake ninja-build jq wget 7zip
+          mkdir /opt/rtk-toolchain
+          cd /opt/rtk-toolchain
+          wget https://github.com/Ameba-AIoT/ameba-toolchain/releases/download/prebuilts-v1.0.3/prebuilts-linux-1.0.3.tar.gz
+          tar -xzf prebuilts-linux-1.0.3.tar.gz 
+
+          
+          # cd to sdk dir
+          cd ${{github.workspace}}/ameba-rtos
+          
+          python -m pip install --upgrade pip
+          pip install -r ${{github.workspace}}/ameba-rtos/tools/requirements.txt 
+          sudo chmod +x ameba.py
+          sudo chmod +x env.sh          
+
+        
+
+          # cd to example repo dir
+          cd ${{github.workspace}}
+          pwd
+          ls -al
+
+          # source env
+          echo source ${{github.workspace}}/ameba-rtos/env.sh > env.sh
+          source env.sh
+          echo $AMEBA_SDK
+          
+          pwd
+          ls -al
+
+          # ameba.py build
+          python ${{github.workspace}}/ameba-rtos/ameba.py build          
+ 
+    - name: Check for bin and img files
+      run: |
+        cd ${{github.workspace}}
+        OTA_ALL_BIN=$(find ./ -name "ota_all.bin" | head -n 1)
+        if [[ -z "$OTA_ALL_BIN" ]]; then
+          echo "Required files are missing,build img failed!"
+          exit 1
+        else
+          echo "Found the following files:"
+          echo "BIN Path: $OTA_ALL_BIN"
+          # ls -al $OTA_ALL_BIN |grep -E "*.bin"  
+        fi
+
+
+
+
