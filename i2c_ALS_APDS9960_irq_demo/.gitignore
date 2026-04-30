@@ -1,0 +1,17 @@
+*.d
+*.o
+*.su
+*.i
+*.ii
+*.s
+
+# project build files
+build_*/
+
+.repo/
+.git/
+.vscode
+.cache
+.venv
+
+# ignore submodules end

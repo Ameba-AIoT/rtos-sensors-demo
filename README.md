@@ -54,20 +54,26 @@ More sensor demos will be added in future updates.
 
 ```text
 .
-├── i2c_gesture_apds9960_demo
-├── i2c_humiture_hdc1080_demo
+├── i2c_ALS_APDS9960_irq_demo
+├── i2c_gesture_APDS9960_demo
+├── i2c_humiture_HDC1080_demo
 ├── i2c_humiture_SHT3x_demo
-└── i2c_illuminance_bh1750_demo
+├── i2c_illuminance_BH1750_demo
+├── i2c_proximity_APDS9960_demo
+├── i2c_proximity_APDS9960_irq_demo
 ```
 
 ### Example Overview
 
 | Demo Directory | Sensor | Description | Interface |
 |---|---|---|---|
-| `i2c_gesture_apds9960_demo` | APDS9960 | Gesture sensing example | I2C |
-| `i2c_humiture_hdc1080_demo` | HDC1080 | Temperature and humidity sensing example | I2C |
+| `i2c_ALS_APDS9960_irq_demo` | APDS9960 | Ambient light sensing interrupt example | I2C |
+| `i2c_gesture_APDS9960_demo` | APDS9960 | Gesture sensing example | I2C |
+| `i2c_humiture_HDC1080_demo` | HDC1080 | Temperature and humidity sensing example | I2C |
 | `i2c_humiture_SHT3x_demo` | SHT3x | Temperature and humidity sensing example | I2C |
-| `i2c_illuminance_bh1750_demo` | BH1750 | Ambient light sensing example | I2C |
+| `i2c_illuminance_BH1750_demo` | BH1750 | Ambient light sensing example | I2C |
+| `i2c_proximity_APDS9960_demo` | APDS9960 | Proximity sensing example | I2C |
+| `i2c_proximity_APDS9960_irq_demo` | APDS9960 | Proximity sensing interrupt example | I2C |
 
 > ⚠️ Hardware wiring, default I2C address, initialization flow, and log output may vary between examples. Please refer to the documentation in each subdirectory for exact details.
 
@@ -129,7 +135,7 @@ Inside the target example directory, follow the corresponding documentation to c
 ## 🔍 Recommendations
 
 - It is recommended to start with simpler examples first, such as:
-  - `i2c_illuminance_bh1750_demo`
+  - `i2c_illuminance_BH1750_demo`
   - `i2c_humiture_SHT3x_demo`
 - Before connecting a new sensor, please check:
   - Whether the supply voltage matches
@@ -149,3 +155,5 @@ Inside the target example directory, follow the corresponding documentation to c
 - Each example project in this repository can be used independently.
 - If you are only interested in one specific sensor, please go directly to the corresponding demo directory for detailed instructions.
 - More sensor and peripheral examples will be added in future updates.
+
+
