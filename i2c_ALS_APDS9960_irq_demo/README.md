@@ -102,17 +102,22 @@ ameba.py build -p
 
   ```bash
   ameba.py flash --p COMx \
-    --image km4_boot_all.bin 0x08000000 0x8014000 \
-    --image km0_km4_app.bin 0x08014000 0x8200000
+    --image boot.bin 0x08000000 0x8014000 \
+    --image app.bin 0x08014000 0x8200000
   ```
 
 - Or use the prebuilt binaries provided in the parent directory of the project:
 
   ```bash
   ameba.py flash --p COMx \
-    --image ../km4_boot_all.bin 0x08000000 0x8014000 \
-    --image ../km0_km4_app.bin 0x08014000 0x8200000
+    --image ../boot.bin 0x08000000 0x8014000 \
+    --image ../app.bin 0x08014000 0x8200000
   ```
+
+> ⚠️ **Note on binary filenames**: The output filenames depend on your SDK revision.
+> The latest SDK generates `boot.bin` + `app.bin`;
+> older SDK revisions generate `km4_boot_all.bin` + `km0_km4_app.bin`.
+> Replace the filenames in the commands above to match your actual build output.
 
 ---
 

@@ -102,17 +102,22 @@ ameba.py build -p
 
   ```bash
   ameba.py flash --p COMx \
-    --image km4_boot_all.bin 0x08000000 0x8014000 \
-    --image km0_km4_app.bin 0x08014000 0x8200000
+    --image boot.bin 0x08000000 0x8014000 \
+    --image app.bin 0x08014000 0x8200000
   ```
 
 - 若要直接使用项目目录上一级中已提供的 **预编译 bin 文件**，可执行：
 
   ```bash
   ameba.py flash --p COMx \
-    --image ../km4_boot_all.bin 0x08000000 0x8014000 \
-    --image ../km0_km4_app.bin 0x08014000 0x8200000
+    --image ../boot.bin 0x08000000 0x8014000 \
+    --image ../app.bin 0x08014000 0x8200000
   ```
+
+> ⚠️ **bin 文件命名说明**：bin 文件名称取决于所使用的 SDK 版本。
+> 最新 SDK 编译产物为 `boot.bin` + `app.bin`；
+> 旧版 SDK 编译产物为 `km4_boot_all.bin` + `km0_km4_app.bin`。
+> 请根据实际编译输出修改上方命令中的文件名。
 
 ---
 
