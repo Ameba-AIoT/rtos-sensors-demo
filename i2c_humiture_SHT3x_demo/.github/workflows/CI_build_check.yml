@@ -12,10 +12,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Checkout SDK repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: Ameba-AIoT/ameba-rtos
         path: ameba-rtos
@@ -33,8 +33,8 @@ jobs:
 
           #check soc_info.json and bin file in the repo root dir
           SOC_JSON=$(find ./ -maxdepth 1 -type f -name "soc_info.json" | head -n 1)
-          APP_BIN=$(find ./ -maxdepth 1 -type f -name "km0_km4_app.bin" | head -n 1)
-          BOOT_BIN=$(find ./ -maxdepth 1 -type f -name "km4_boot_all.bin" | head -n 1)
+          APP_BIN=$(find ./ -maxdepth 1 -type f -name "app.bin" | head -n 1)
+          BOOT_BIN=$(find ./ -maxdepth 1 -type f -name "boot.bin" | head -n 1)
           if [[ -z "$SOC_JSON" || -z "$APP_BIN" || -z "$BOOT_BIN" ]]; then
           echo "Git push files are incomplete.Please check your original respository workspace files!"
           exit 1
@@ -66,6 +66,7 @@ jobs:
 
           # source env
           echo source ${{github.workspace}}/ameba-rtos/env.sh > env.sh
+          export RTK_TOOLCHAIN_DIR=/opt/rtk-toolchain
           source env.sh
           echo $AMEBA_SDK
           
