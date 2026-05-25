@@ -29,7 +29,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4.2.0
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -40,14 +40,21 @@ jobs:
           # Manual trigger: build all demos or specific
           BUILD_MODE="${{ inputs.build_mode }}"
           if [[ "$BUILD_MODE" == "all-demos" ]]; then
-            # Mark all demos as changed
-            CHANGED=$(ls -d *_demo 2>/dev/null | sed 's|_demo||' || echo "")
+            # Mark all demos as changed - get all valid demos
+            CHANGED=""
+            for dir in *_demo; do
+              if [[ -d "$dir" && -f "$dir/soc_info.json" && -f "$dir/app.bin" && -f "$dir/boot.bin" ]]; then
+                CHANGED="$CHANGED $(echo $dir | sed 's|_demo||')"
+              fi
+            done
+            CHANGED=$(echo "$CHANGED" | xargs)
           else
             # Specific demo
             DEMO="${{ inputs.demo_name }}"
-            CHANGED=$(test -d "${DEMO}_demo" && echo "$DEMO" || echo "")
-            if [[ -z "$CHANGED" ]]; then
-              echo "Error: Demo '${DEMO}_demo' not found"
+            if [[ -d "${DEMO}_demo" && -f "${DEMO}_demo/soc_info.json" && -f "${DEMO}_demo/app.bin" && -f "${DEMO}_demo/boot.bin" ]]; then
+              CHANGED="$DEMO"
+            else
+              echo "Error: Demo '${DEMO}_demo' not found or missing required files"
               exit 1
             fi
           fi
@@ -86,10 +93,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4.2.0
+      uses: actions/checkout@v4
 
     - name: Checkout SDK repository
-      uses: actions/checkout@v4.2.0
+      uses: actions/checkout@v4
       with:
         repository: Ameba-AIoT/ameba-rtos
         path: ameba-rtos
