@@ -5,6 +5,20 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: 'Build mode: all-demos or specific'
+        required: true
+        default: 'all-demos'
+        type: choice
+        options:
+          - all-demos
+          - specific-demo
+      demo_name:
+        description: 'Demo name to build (only if specific-demo selected)'
+        required: false
+        type: string
 
 jobs:
   detect-demos:
@@ -15,14 +29,29 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.0
       with:
         fetch-depth: 0
 
     - name: Detect changed demo folders
       id: set-changed
       run: |
-        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          # Manual trigger: build all demos or specific
+          BUILD_MODE="${{ inputs.build_mode }}"
+          if [[ "$BUILD_MODE" == "all-demos" ]]; then
+            # Mark all demos as changed
+            CHANGED=$(ls -d *_demo 2>/dev/null | sed 's|_demo||' || echo "")
+          else
+            # Specific demo
+            DEMO="${{ inputs.demo_name }}"
+            CHANGED=$(test -d "${DEMO}_demo" && echo "$DEMO" || echo "")
+            if [[ -z "$CHANGED" ]]; then
+              echo "Error: Demo '${DEMO}_demo' not found"
+              exit 1
+            fi
+          fi
+        elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
           # PR: get changed files relative to base branch
           CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -o '^[^/]*_demo/' | sort -u | sed 's|/||')
         else
@@ -57,10 +86,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.0
 
     - name: Checkout SDK repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.0
       with:
         repository: Ameba-AIoT/ameba-rtos
         path: ameba-rtos
@@ -89,22 +118,15 @@ jobs:
     - name: Check if demo was changed
       id: check-changed
       run: |
-        # Manual trigger: always build all demos
-        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-          echo "changed=true" >> $GITHUB_OUTPUT
-          echo "Manual trigger: building ${{ matrix.demo }}"
-          exit 0
-        fi
-
         CHANGED_DEMOS="${{ needs.detect-demos.outputs.changed-demos }}"
         CURRENT_DEMO="${{ matrix.demo }}"
 
         if echo "$CHANGED_DEMOS" | grep -q "$CURRENT_DEMO"; then
           echo "changed=true" >> $GITHUB_OUTPUT
-          echo "Demo $CURRENT_DEMO was modified, building..."
+          echo "Demo $CURRENT_DEMO will be built"
         else
           echo "changed=false" >> $GITHUB_OUTPUT
-          echo "Demo $CURRENT_DEMO was not modified, skipping build"
+          echo "Demo $CURRENT_DEMO not in changed list, skipping"
         fi
 
     - name: Validate demo structure
