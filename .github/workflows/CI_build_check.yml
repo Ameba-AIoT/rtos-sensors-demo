@@ -1,0 +1,195 @@
+name: CI Build Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  detect-demos:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      changed-demos: ${{ steps.set-changed.outputs.demos }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Detect changed demo folders
+      id: set-changed
+      run: |
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          # PR: get changed files relative to base branch
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -o '^[^/]*_demo/' | sort -u | sed 's|/||')
+        else
+          # Push: get changed files in latest commit
+          CHANGED=$(git diff --name-only HEAD~1...HEAD | grep -o '^[^/]*_demo/' | sort -u | sed 's|/||')
+        fi
+        echo "demos=$CHANGED" >> $GITHUB_OUTPUT
+        echo "Changed demos: $CHANGED"
+
+    - name: Detect all valid demos
+      id: set-matrix
+      run: |
+        DEMOS=()
+        for dir in *_demo; do
+          if [[ -d "$dir" && -f "$dir/soc_info.json" && -f "$dir/app.bin" && -f "$dir/boot.bin" ]]; then
+            DEMOS+=("$dir")
+          fi
+        done
+
+        # Convert to JSON array
+        MATRIX=$(printf '%s\n' "${DEMOS[@]}" | jq -R . | jq -s . | jq -c .)
+        echo "matrix={\"demo\":$MATRIX}" >> $GITHUB_OUTPUT
+        echo "Found demos: $MATRIX"
+
+  build-matrix:
+    runs-on: ubuntu-latest
+    needs: detect-demos
+    if: needs.detect-demos.outputs.matrix != '{"demo":[]}'
+    strategy:
+      matrix: ${{ fromJson(needs.detect-demos.outputs.matrix) }}
+      fail-fast: false
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Checkout SDK repository
+      uses: actions/checkout@v4
+      with:
+        repository: Ameba-AIoT/ameba-rtos
+        path: ameba-rtos
+
+    - name: Setup build environment
+      run: |
+        # Setup toolchain
+        sudo apt-get update -qq
+        sudo apt-get install -y cmake ninja-build jq wget 7zip
+        mkdir -p /opt/rtk-toolchain
+        cd /opt/rtk-toolchain
+        wget https://github.com/Ameba-AIoT/ameba-toolchain/releases/download/prebuilts-v1.0.3/prebuilts-linux-1.0.3.tar.gz
+        tar -xzf prebuilts-linux-1.0.3.tar.gz
+
+        # Setup SDK
+        cd ${{ github.workspace }}/ameba-rtos
+        python -m pip install --upgrade pip
+        pip install -r ${{ github.workspace }}/ameba-rtos/tools/requirements.txt
+        sudo chmod +x ameba.py
+        sudo chmod +x env.sh
+
+        # Setup environment
+        sudo ln -sf /bin/bash /bin/sh
+        export RTK_TOOLCHAIN_DIR=/opt/rtk-toolchain
+
+    - name: Check if demo was changed
+      id: check-changed
+      run: |
+        # Manual trigger: always build all demos
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "Manual trigger: building ${{ matrix.demo }}"
+          exit 0
+        fi
+
+        CHANGED_DEMOS="${{ needs.detect-demos.outputs.changed-demos }}"
+        CURRENT_DEMO="${{ matrix.demo }}"
+
+        if echo "$CHANGED_DEMOS" | grep -q "$CURRENT_DEMO"; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "Demo $CURRENT_DEMO was modified, building..."
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "Demo $CURRENT_DEMO was not modified, skipping build"
+        fi
+
+    - name: Validate demo structure
+      if: steps.check-changed.outputs.changed == 'true'
+      run: |
+        DEMO_PATH="${{ github.workspace }}/${{ matrix.demo }}"
+
+        if [[ ! -d "$DEMO_PATH" ]]; then
+          echo "Error: Demo directory not found: $DEMO_PATH"
+          exit 1
+        fi
+
+        # Check required files
+        SOC_JSON="$DEMO_PATH/soc_info.json"
+        APP_BIN="$DEMO_PATH/app.bin"
+        BOOT_BIN="$DEMO_PATH/boot.bin"
+        CMAKELISTS="$DEMO_PATH/CMakeLists.txt"
+
+        if [[ ! -f "$SOC_JSON" || ! -f "$APP_BIN" || ! -f "$BOOT_BIN" || ! -f "$CMAKELISTS" ]]; then
+          echo "Error: Missing required files in ${{ matrix.demo }}"
+          echo "  soc_info.json: $(test -f "$SOC_JSON" && echo 'OK' || echo 'MISSING')"
+          echo "  app.bin: $(test -f "$APP_BIN" && echo 'OK' || echo 'MISSING')"
+          echo "  boot.bin: $(test -f "$BOOT_BIN" && echo 'OK' || echo 'MISSING')"
+          echo "  CMakeLists.txt: $(test -f "$CMAKELISTS" && echo 'OK' || echo 'MISSING')"
+          exit 1
+        fi
+
+    - name: Build ${{ matrix.demo }}
+      if: steps.check-changed.outputs.changed == 'true'
+      env:
+        RTK_TOOLCHAIN_DIR: /opt/rtk-toolchain
+      run: |
+        cd ${{ github.workspace }}/${{ matrix.demo }}
+        source ${{ github.workspace }}/ameba-rtos/env.sh
+
+        echo "Building demo: ${{ matrix.demo }}"
+        python ${{ github.workspace }}/ameba-rtos/ameba.py build
+
+    - name: Check build output
+      if: steps.check-changed.outputs.changed == 'true'
+      run: |
+        DEMO_PATH="${{ github.workspace }}/${{ matrix.demo }}"
+        OTA_ALL_BIN="$DEMO_PATH/ota_all.bin"
+
+        if [[ ! -f "$OTA_ALL_BIN" ]]; then
+          echo "Error: Build failed for ${{ matrix.demo }}, ota_all.bin not generated"
+          exit 1
+        fi
+
+        echo "✓ Successfully built ${{ matrix.demo }}"
+        ls -lh "$OTA_ALL_BIN"
+
+    - name: Skip build (no changes)
+      if: steps.check-changed.outputs.changed == 'false'
+      run: |
+        echo "⊘ Demo ${{ matrix.demo }} not modified, skipped"
+
+  build-summary:
+    runs-on: ubuntu-latest
+    needs: [detect-demos, build-matrix]
+    if: always()
+
+    steps:
+    - name: Summarize results
+      run: |
+        echo "════════════════════════════════════════"
+        echo "CI Build Check Summary"
+        echo "════════════════════════════════════════"
+
+        DETECT_STATUS="${{ needs.detect-demos.result }}"
+        BUILD_STATUS="${{ needs.build-matrix.result }}"
+
+        echo "Detection: $DETECT_STATUS"
+        echo "Build: $BUILD_STATUS"
+
+        if [[ "$DETECT_STATUS" == "success" && "$BUILD_STATUS" == "success" ]]; then
+          echo "✓ All changed demos built successfully"
+          exit 0
+        elif [[ "$DETECT_STATUS" == "failure" ]]; then
+          echo "✗ Failed to detect demos"
+          exit 1
+        elif [[ "$BUILD_STATUS" == "failure" ]]; then
+          echo "✗ Some demos failed to build"
+          exit 1
+        else
+          echo "⊘ No demos detected or all skipped"
+          exit 0
+        fi
