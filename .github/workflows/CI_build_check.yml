@@ -60,10 +60,10 @@ jobs:
           fi
         elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
           # PR: get changed files relative to base branch
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -o '^[^/]*_demo/' | sort -u | sed 's|/||')
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -o '^[^/]*_demo/' | sort -u | sed 's|/||' | tr '\n' ' ' | xargs)
         else
           # Push: get changed files in latest commit
-          CHANGED=$(git diff --name-only HEAD~1...HEAD | grep -o '^[^/]*_demo/' | sort -u | sed 's|/||')
+          CHANGED=$(git diff --name-only ${{ github.event.before }}...${{ github.event.after }} | grep -o '^[^/]*_demo/' | sort -u | sed 's|/||' | tr '\n' ' ' | xargs)
         fi
         echo "demos=$CHANGED" >> $GITHUB_OUTPUT
         echo "Changed demos: $CHANGED"
@@ -127,8 +127,9 @@ jobs:
       run: |
         CHANGED_DEMOS="${{ needs.detect-demos.outputs.changed-demos }}"
         CURRENT_DEMO="${{ matrix.demo }}"
+        DEMO_NAME=$(echo "$CURRENT_DEMO" | sed 's|_demo||')
 
-        if echo "$CHANGED_DEMOS" | grep -q "$CURRENT_DEMO"; then
+        if echo " $CHANGED_DEMOS " | grep -qE " ${DEMO_NAME}( |$)"; then
           echo "changed=true" >> $GITHUB_OUTPUT
           echo "Demo $CURRENT_DEMO will be built"
         else
