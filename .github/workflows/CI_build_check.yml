@@ -41,18 +41,18 @@ jobs:
         case "${{ github.event_name }}" in
           workflow_dispatch)
             if [[ "${{ inputs.build_mode }}" == "all-demos" ]]; then
-              DEMOS=$(ls -d *_demo 2>/dev/null | sed 's|_demo/\?$||' | tr '\n' ' ')
+              DEMOS=$(ls -d *_demo 2>/dev/null | sed 's|_demo/\?$||' | tr '\n' ' ' | xargs)
             else
               DEMOS="${{ inputs.demo_name }}"
             fi
             ;;
           pull_request)
             DEMOS=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" \
-              | grep -o '^[^/]*_demo/' | sort -u | sed 's|_demo/||' | tr '\n' ' ')
+              | grep -o '^[^/]*_demo/' | sort -u | sed 's|_demo/||' | tr '\n' ' ' | xargs)
             ;;
           *)
             DEMOS=$(git diff --name-only "${{ github.event.before }}...${{ github.event.after }}" \
-              | grep -o '^[^/]*_demo/' | sort -u | sed 's|_demo/||' | tr '\n' ' ')
+              | grep -o '^[^/]*_demo/' | sort -u | sed 's|_demo/||' | tr '\n' ' ' | xargs)
             ;;
         esac
 
