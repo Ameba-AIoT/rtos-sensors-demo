@@ -21,113 +21,128 @@ on:
         type: string
 
 jobs:
+  # ====================================================================
+  # Phase 1 — detect which demos need building
+  # ====================================================================
   detect-demos:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      changed-demos: ${{ steps.set-changed.outputs.demos }}
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
+        persist-credentials: false
 
-    - name: Detect changed demo folders
-      id: set-changed
-      run: |
-        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-          # Manual trigger: build all demos or specific
-          BUILD_MODE="${{ inputs.build_mode }}"
-          if [[ "$BUILD_MODE" == "all-demos" ]]; then
-            # Mark all demos as changed - get all valid demos
-            CHANGED=""
-            for dir in *_demo; do
-              if [[ -d "$dir" && -f "$dir/soc_info.json" && -f "$dir/app.bin" && -f "$dir/boot.bin" ]]; then
-                CHANGED="$CHANGED $(echo $dir | sed 's|_demo||')"
-              fi
-            done
-            CHANGED=$(echo "$CHANGED" | xargs)
-          else
-            # Specific demo
-            DEMO="${{ inputs.demo_name }}"
-            if [[ -d "${DEMO}_demo" && -f "${DEMO}_demo/soc_info.json" && -f "${DEMO}_demo/app.bin" && -f "${DEMO}_demo/boot.bin" ]]; then
-              CHANGED="$DEMO"
-            else
-              echo "Error: Demo '${DEMO}_demo' not found or missing required files"
-              exit 1
-            fi
-          fi
-        elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          # PR: get changed files relative to base branch
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -o '^[^/]*_demo/' | sort -u | sed 's|/||' | tr '\n' ' ' | xargs)
-        else
-          # Push: get changed files in latest commit
-          CHANGED=$(git diff --name-only ${{ github.event.before }}...${{ github.event.after }} | grep -o '^[^/]*_demo/' | sort -u | sed 's|/||' | tr '\n' ' ' | xargs)
-        fi
-        echo "demos=$CHANGED" >> $GITHUB_OUTPUT
-        echo "Changed demos: $CHANGED"
-
-    - name: Detect all valid demos
+    - name: Detect changed / requested demos
       id: set-matrix
       run: |
-        DEMOS=()
-        for dir in *_demo; do
-          if [[ -d "$dir" && -f "$dir/soc_info.json" && -f "$dir/app.bin" && -f "$dir/boot.bin" ]]; then
-            DEMOS+=("$dir")
-          fi
-        done
+        case "${{ github.event_name }}" in
+          workflow_dispatch)
+            if [[ "${{ inputs.build_mode }}" == "all-demos" ]]; then
+              DEMOS=$(ls -d *_demo 2>/dev/null | sed 's|_demo/\?$||' | tr '\n' ' ')
+            else
+              DEMOS="${{ inputs.demo_name }}"
+            fi
+            ;;
+          pull_request)
+            DEMOS=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" \
+              | grep -o '^[^/]*_demo/' | sort -u | sed 's|_demo/||' | tr '\n' ' ')
+            ;;
+          *)
+            DEMOS=$(git diff --name-only "${{ github.event.before }}...${{ github.event.after }}" \
+              | grep -o '^[^/]*_demo/' | sort -u | sed 's|_demo/||' | tr '\n' ' ')
+            ;;
+        esac
 
-        # Convert to JSON array
-        MATRIX=$(printf '%s\n' "${DEMOS[@]}" | jq -R . | jq -s . | jq -c .)
-        echo "matrix={\"demo\":$MATRIX}" >> $GITHUB_OUTPUT
-        echo "Found demos: $MATRIX"
+        if [[ -z "${DEMOS// /}" ]]; then
+          echo "matrix={\"demo\":[]}" >> "$GITHUB_OUTPUT"
+          echo "No demos to build."
+        else
+          MATRIX=$(echo "$DEMOS" | tr ' ' '\n' | jq -R . | jq -s . | jq -c '{demo: .}')
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "Demos to build: $DEMOS"
+        fi
 
-  setup-toolchain:
+  # ====================================================================
+  # Phase 2 — SDK environment setup (toolchain + Python venv, cached)
+  # ====================================================================
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      prebuilts_version: ${{ steps.prebuilts.outputs.prebuilts_version }}
+      req_hash: ${{ steps.prebuilts.outputs.req_hash }}
+
     steps:
     - name: Checkout SDK repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Ameba-AIoT/ameba-rtos
+        ref: release/v1.2
         path: ameba-rtos
+        persist-credentials: false
+        submodules: 'recursive'
 
-    - name: Cache toolchain
-      id: cache-toolchain
-      uses: actions/cache@v4
-      with:
-        path: /opt/rtk-toolchain
-        key: rtk-toolchain-linux-1.0.3-${{ runner.os }}
-        restore-keys: rtk-toolchain-linux
-
-    - name: Setup build environment
-      if: steps.cache-toolchain.outputs.cache-hit != 'true'
+    - name: Platform prepare — install system dependencies
       run: |
         sudo apt-get update -qq
-        sudo apt-get install -y cmake ninja-build jq wget 7zip
-        mkdir -p /opt/rtk-toolchain
-        cd /opt/rtk-toolchain
-        wget https://github.com/Ameba-AIoT/ameba-toolchain/releases/download/prebuilts-v1.0.3/prebuilts-linux-1.0.3.tar.gz
-        tar -xzf prebuilts-linux-1.0.3.tar.gz
-
-    - name: Setup SDK dependencies
-      run: |
-        cd ${{ github.workspace }}/ameba-rtos
+        sudo apt-get install -y cmake ninja-build jq
+        sudo ln -sf /bin/bash /bin/sh
         python -m pip install --upgrade pip
-        pip install -r ${{ github.workspace }}/ameba-rtos/tools/requirements.txt
-        sudo chmod +x ameba.py
-        sudo chmod +x env.sh
 
-    - name: Upload SDK and tools
-      uses: actions/upload-artifact@v4
+    - name: Read prebuilts version from SDK env.sh
+      id: prebuilts
+      shell: bash
+      run: |
+        VER=$(head -n1 ameba-rtos/env.sh | cut -d= -f2)
+        REQ_HASH=$(sha256sum ameba-rtos/tools/requirements.txt | cut -d' ' -f1)
+        echo "prebuilts_version=$VER"  >> "$GITHUB_OUTPUT"
+        echo "req_hash=$REQ_HASH"      >> "$GITHUB_OUTPUT"
+
+    # ---------------------------------------------------------------
+    # Cache toolchain — shared across all matrix build jobs
+    # ---------------------------------------------------------------
+    - name: Cache toolchain
+      uses: actions/cache@v6
       with:
-        name: ameba-rtos-sdk
-        path: ameba-rtos
-        retention-days: 1
+        path: toolchain
+        key: toolchain-linux-${{ steps.prebuilts.outputs.prebuilts_version }}
 
-  build-matrix:
+    - name: Cache Python virtual environment
+      uses: actions/cache@v6
+      with:
+        path: ameba-rtos/.venv
+        key: venv-linux-${{ steps.prebuilts.outputs.req_hash }}
+
+    - name: Setup SDK environment — toolchain + Python venv
+      shell: bash
+      run: |
+        set -e
+
+        # Swap download source: GitHub primary (faster on GitHub Actions)
+        sed -i \
+          's|^DOWNLOAD_URL=$PREBUILTS_LINUX_URL_ALIYUN|DOWNLOAD_URL=$PREBUILTS_LINUX_URL|; t; s|^DOWNLOAD_URL_SECOND_SOURCE=$PREBUILTS_LINUX_URL|DOWNLOAD_URL_SECOND_SOURCE=$PREBUILTS_LINUX_URL_ALIYUN|' \
+          ameba-rtos/env.sh
+
+        # Workspace-relative toolchain dir (cacheable, no sudo needed)
+        mkdir -p toolchain
+        export RTK_TOOLCHAIN_DIR="$(cd toolchain && pwd)"
+
+        # env.sh handles download + extract + Python venv + requirements
+        source ameba-rtos/env.sh
+
+        echo "SDK path:       $AMEBA_SDK"
+        echo "Toolchain dir:  $RTK_TOOLCHAIN_DIR"
+        echo "Prebuilts dir:  $PREBUILTS_DIR"
+        echo "Python venv:    ${VIRTUAL_ENV:-<not activated>}"
+
+  # ====================================================================
+  # Phase 3 — build each changed demo in parallel
+  # ====================================================================
+  build:
     runs-on: ubuntu-latest
-    needs: [detect-demos, setup-toolchain]
+    needs: [detect-demos, setup]
     if: needs.detect-demos.outputs.matrix != '{"demo":[]}'
     strategy:
       matrix: ${{ fromJson(needs.detect-demos.outputs.matrix) }}
@@ -135,128 +150,56 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download SDK and tools
-      uses: actions/download-artifact@v4
+      uses: actions/checkout@v7
       with:
-        name: ameba-rtos-sdk
-        path: ameba-rtos
+        persist-credentials: false
 
+    - name: Checkout SDK repository
+      uses: actions/checkout@v7
+      with:
+        repository: Ameba-AIoT/ameba-rtos
+        ref: release/v1.2
+        path: sdk
+        persist-credentials: false
+        submodules: 'recursive'
+
+    # ---------------------------------------------------------------
+    # Restore toolchain & Python venv from cache
+    # ---------------------------------------------------------------
     - name: Restore toolchain cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
-        path: /opt/rtk-toolchain
-        key: rtk-toolchain-linux-1.0.3-${{ runner.os }}
-        restore-keys: rtk-toolchain-linux
+        path: toolchain
+        key: toolchain-linux-${{ needs.setup.outputs.prebuilts_version }}
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update -qq
-        sudo apt-get install -y cmake ninja-build jq
-        sudo ln -sf /bin/bash /bin/sh
-        export RTK_TOOLCHAIN_DIR=/opt/rtk-toolchain
-
-    - name: Check if demo was changed
-      id: check-changed
-      run: |
-        CHANGED_DEMOS="${{ needs.detect-demos.outputs.changed-demos }}"
-        CURRENT_DEMO="${{ matrix.demo }}"
-        DEMO_NAME=$(echo "$CURRENT_DEMO" | sed 's|_demo||')
-
-        if echo " $CHANGED_DEMOS " | grep -qE " ${DEMO_NAME}( |$)"; then
-          echo "changed=true" >> $GITHUB_OUTPUT
-          echo "Demo $CURRENT_DEMO will be built"
-        else
-          echo "changed=false" >> $GITHUB_OUTPUT
-          echo "Demo $CURRENT_DEMO not in changed list, skipping"
-        fi
-
-    - name: Validate demo structure
-      if: steps.check-changed.outputs.changed == 'true'
-      run: |
-        DEMO_PATH="${{ github.workspace }}/${{ matrix.demo }}"
-
-        if [[ ! -d "$DEMO_PATH" ]]; then
-          echo "Error: Demo directory not found: $DEMO_PATH"
-          exit 1
-        fi
-
-        # Check required files
-        SOC_JSON="$DEMO_PATH/soc_info.json"
-        APP_BIN="$DEMO_PATH/app.bin"
-        BOOT_BIN="$DEMO_PATH/boot.bin"
-        CMAKELISTS="$DEMO_PATH/CMakeLists.txt"
-
-        if [[ ! -f "$SOC_JSON" || ! -f "$APP_BIN" || ! -f "$BOOT_BIN" || ! -f "$CMAKELISTS" ]]; then
-          echo "Error: Missing required files in ${{ matrix.demo }}"
-          echo "  soc_info.json: $(test -f "$SOC_JSON" && echo 'OK' || echo 'MISSING')"
-          echo "  app.bin: $(test -f "$APP_BIN" && echo 'OK' || echo 'MISSING')"
-          echo "  boot.bin: $(test -f "$BOOT_BIN" && echo 'OK' || echo 'MISSING')"
-          echo "  CMakeLists.txt: $(test -f "$CMAKELISTS" && echo 'OK' || echo 'MISSING')"
-          exit 1
-        fi
+    - name: Restore Python venv cache
+      uses: actions/cache@v6
+      with:
+        path: sdk/.venv
+        key: venv-linux-${{ needs.setup.outputs.req_hash }}
 
     - name: Build ${{ matrix.demo }}
-      if: steps.check-changed.outputs.changed == 'true'
-      env:
-        RTK_TOOLCHAIN_DIR: /opt/rtk-toolchain
+      shell: bash
       run: |
-        cd ${{ github.workspace }}/${{ matrix.demo }}
-        source ${{ github.workspace }}/ameba-rtos/env.sh
+        set -e
 
-        echo "Building demo: ${{ matrix.demo }}"
-        python ${{ github.workspace }}/ameba-rtos/ameba.py build
+        # Swap download source (same as setup job — idempotent)
+        sed -i \
+          's|^DOWNLOAD_URL=$PREBUILTS_LINUX_URL_ALIYUN|DOWNLOAD_URL=$PREBUILTS_LINUX_URL|; t; s|^DOWNLOAD_URL_SECOND_SOURCE=$PREBUILTS_LINUX_URL|DOWNLOAD_URL_SECOND_SOURCE=$PREBUILTS_LINUX_URL_ALIYUN|' \
+          sdk/env.sh
 
-    - name: Check build output
-      if: steps.check-changed.outputs.changed == 'true'
+        export RTK_TOOLCHAIN_DIR="$(cd toolchain && pwd)"
+        source sdk/env.sh
+
+        cd "${{ matrix.demo }}_demo"
+        python ../sdk/ameba.py build -p -D USE_SECOND_SOURCE=True
+
+    - name: Check build output — ${{ matrix.demo }}
       run: |
-        DEMO_PATH="${{ github.workspace }}/${{ matrix.demo }}"
-        OTA_ALL_BIN=$(find "$DEMO_PATH" -name "ota_all.bin" -type f | head -1)
-
+        OTA_ALL_BIN=$(find "${{ matrix.demo }}_demo" -name "ota_all.bin" -type f | head -1)
         if [[ -z "$OTA_ALL_BIN" ]]; then
-          echo "Error: Build failed for ${{ matrix.demo }}, ota_all.bin not found"
-          echo "Build artifacts search:"
-          find "$DEMO_PATH" -name "*.bin" -type f 2>/dev/null || echo "No .bin files found"
+          echo "::error::Build failed for ${{ matrix.demo }} — ota_all.bin not found"
           exit 1
         fi
-
-        echo "✓ Successfully built ${{ matrix.demo }}"
+        echo "✓ ${{ matrix.demo }} built successfully"
         ls -lh "$OTA_ALL_BIN"
-
-    - name: Skip build (no changes)
-      if: steps.check-changed.outputs.changed == 'false'
-      run: |
-        echo "⊘ Demo ${{ matrix.demo }} not modified, skipped"
-
-  build-summary:
-    runs-on: ubuntu-latest
-    needs: [detect-demos, build-matrix]
-    if: always()
-
-    steps:
-    - name: Summarize results
-      run: |
-        echo "════════════════════════════════════════"
-        echo "CI Build Check Summary"
-        echo "════════════════════════════════════════"
-
-        DETECT_STATUS="${{ needs.detect-demos.result }}"
-        BUILD_STATUS="${{ needs.build-matrix.result }}"
-
-        echo "Detection: $DETECT_STATUS"
-        echo "Build: $BUILD_STATUS"
-
-        if [[ "$DETECT_STATUS" == "success" && "$BUILD_STATUS" == "success" ]]; then
-          echo "✓ All changed demos built successfully"
-          exit 0
-        elif [[ "$DETECT_STATUS" == "failure" ]]; then
-          echo "✗ Failed to detect demos"
-          exit 1
-        elif [[ "$BUILD_STATUS" == "failure" ]]; then
-          echo "✗ Some demos failed to build"
-          exit 1
-        else
-          echo "⊘ No demos detected or all skipped"
-          exit 0
-        fi
