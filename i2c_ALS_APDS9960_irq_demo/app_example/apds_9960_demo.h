@@ -25,16 +25,16 @@
 #define APDS9960_INT_PIN           _PA_29   //interrupt GPIO pin
 #define I2C_MASTER_SDA             _PA_31   //SDA
 #define I2C_MASTER_SCL             _PA_30   //SCL
-#define I2C_CLK                    100000   // 100kHz  Fast Mode 400kHz，
+#define I2C_CLK                    100000   // 100kHz, Fast Mode 400kHz
 #define I2C_0                      0
 #define MAX_DELAY_TIME_MS          200
 
-/* 7-bit I2C 地址 */
-#define APDS9960_I2C_ADDR          0x39    // 数据手册指定单一 7-bit 地址 0x39
+/* 7-bit I2C address */
+#define APDS9960_I2C_ADDR          0x39    // Datasheet specifies single 7-bit address 0x39
 
-/* 寄存器地址 */
+/* Register addresses */
 #define APDS9960_REG_ENABLE        0x80    // Enable states and interrupts
-#define APDS9960_REG_ATIME         0x81    // ADC integration time（ALS用，暂可保默认）
+#define APDS9960_REG_ATIME         0x81    // ADC integration time (for ALS, keep default for now)
 #define APDS9960_REG_WTIME         0x83    // Wait time
 #define APDS9960_REG_AILTL         0x84
 #define APDS9960_REG_AILTH         0x85
@@ -43,8 +43,8 @@
 #define APDS9960_REG_PILT          0x89    // This register provides the low interrupt threshold
 #define APDS9960_REG_PIHT          0x8B    // This register provides the high interrupt threshold
 #define APDS9960_REG_PERS          0x8C    // Interrupt persistence
-#define APDS9960_REG_CONFIG1       0x8D    // Wait long config（上电=0x40）
-#define APDS9960_REG_PPULSE        0x8E    // Proximity pulse count and length（默认0x40）
+#define APDS9960_REG_CONFIG1       0x8D    // Wait long config (power-on = 0x40)
+#define APDS9960_REG_PPULSE        0x8E    // Proximity pulse count and length (default 0x40)
 #define APDS9960_REG_CONTROL       0x8F    // Gain control
 #define APDS9960_REG_CONFIG2       0x90    // Configuration two
 #define APDS9960_REG_ID            0x92    // Device ID
@@ -66,7 +66,7 @@
 #define APDS9960_REG_GFIFO_L       0xFE
 #define APDS9960_REG_GFIFO_R       0xFF
 
-/* ENABLE 寄存器 bit 定义 */
+/* ENABLE register bit definitions */
 #define APDS9960_ENABLE_PON        (1 << 0)   // Power ON
 #define APDS9960_ENABLE_AEN        (1 << 1)   // ALS Enable
 #define APDS9960_ENABLE_PEN        (1 << 2)   // Proximity Enable
@@ -75,15 +75,16 @@
 #define APDS9960_ENABLE_PIEN       (1 << 5)   // Proximity interrupt enable
 #define APDS9960_ENABLE_GEN        (1 << 6)   // Gesture enable
 
-/* STATUS 寄存器 bit（只用到 PVALID） */
+/* STATUS register bits (only PVALID used) */
 #define APDS9960_STATUS_AVALID     (1 << 0)   // ALS Valid
 #define APDS9960_STATUS_PVALID     (1 << 1)   // Proximity Valid
 #define APDS9960_STATUS_AINT       (1 << 4)   // ALS Interrupt
 #define APDS9960_STATUS_PINT       (1 << 5)   // Proximity Interrupt
 #define APDS9960_STATUS_CPSAT      (1 << 7)   // Clear diode saturation
 
-/* 简单错误码 */
-typedef enum {
+/* Simple error codes */
+typedef enum
+{
     APDS9960_OK           = 0,
     APDS9960_ERR_I2C      = -1,
     APDS9960_ERR_ID       = -2,
@@ -94,12 +95,9 @@ apds9960_status_t apds9960_read_als_clear(uint16_t *cdata);
 void apds9960_demo_task(void);
 void apds9960_int_isr(void);
 
-
-
 void gpio_led_init(void);
 void gpio_toggle(u32 GPIO_Pin, int time_ms);
 void apds9960_int_isr_handler(uint32_t id, uint32_t event);
 void apds9960_int_gpio_init(void);
 
-
-#endif 
+#endif

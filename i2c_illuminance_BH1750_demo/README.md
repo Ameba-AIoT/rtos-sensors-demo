@@ -6,8 +6,8 @@
 
 - 📎 Development board purchase links:   
   - [🛒 Taobao](https://item.taobao.com/item.htm?id=904981157046)  
-  - [📦 Amazon](https://www.amazon.com/-/zh/dp/B0FB33DT2C/)  
-- 📄 [Chip Details](https://aiot.realmcu.com/zh/module/rtl8721dx.html)
+  
+- 📄 [Chip Details](https://aiot.realmcu.com/zh/product/rtl8721dx.html)
 - 📚 [IIC Document](https://aiot.realmcu.com/zh/latest/rtos/peripherals/i2c/index.html)
 
 

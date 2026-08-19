@@ -8,33 +8,33 @@
 #define I2C_0 0
 #define I2C_1 1
 
-// HDC1080 I2C 设备地址
+// HDC1080 I2C device address
 #define HDC1080_ADDR        0x40
 
-// 测量与配置寄存器
-#define HDC1080_REG_TEMP        0x00    // 温度输出寄存器
-#define HDC1080_REG_HUMID       0x01    // 湿度输出寄存器
-#define HDC1080_REG_CONFIG      0x02    // 配置寄存器
+// Measurement and configuration registers
+#define HDC1080_REG_TEMP        0x00    // Temperature output register
+#define HDC1080_REG_HUMID       0x01    // Humidity output register
+#define HDC1080_REG_CONFIG      0x02    // Configuration register
 
-// 芯片ID与序列号寄存器
-#define HDC1080_REG_SERIAL_ID1  0xFB    // 序列号高位
-#define HDC1080_REG_SERIAL_ID2  0xFC    // 序列号中位
-#define HDC1080_REG_SERIAL_ID3  0xFD    // 序列号低位
-#define HDC1080_REG_MANUF_ID    0xFE    // 厂商ID
-#define HDC1080_REG_DEVICE_ID   0xFF    // 设备ID
+// Chip ID and serial number registers
+#define HDC1080_REG_SERIAL_ID1  0xFB    // Serial number high byte
+#define HDC1080_REG_SERIAL_ID2  0xFC    // Serial number middle byte
+#define HDC1080_REG_SERIAL_ID3  0xFD    // Serial number low byte
+#define HDC1080_REG_MANUF_ID    0xFE    // Manufacturer ID
+#define HDC1080_REG_DEVICE_ID   0xFF    // Device ID
 
-// 配置寄存器位定义
-#define HDC1080_CFG_RST        (1 << 15)    // 软件复位
-#define HDC1080_CFG_MODE_T_H   (1 << 12)    // 温湿度同时测量模式
-#define HDC1080_CFG_TRES_14BIT (0 << 10)    // 温度14位分辨率
-#define HDC1080_CFG_HRES_14BIT (0 << 8)     // 湿度14位分辨率
+// Configuration register bit definitions
+#define HDC1080_CFG_RST        (1 << 15)    // Software reset
+#define HDC1080_CFG_MODE_T_H   (1 << 12)    // Temperature and humidity simultaneous measurement mode
+#define HDC1080_CFG_TRES_14BIT (0 << 10)    // Temperature 14-bit resolution
+#define HDC1080_CFG_HRES_14BIT (0 << 8)     // Humidity 14-bit resolution
 
 #include <stdio.h>
 
 
 
 
-// 函数声明
+// Function declarations
 void sys_init(void);
 
 void HDC1080_WriteReg(uint8_t reg_add, uint16_t reg_dat);

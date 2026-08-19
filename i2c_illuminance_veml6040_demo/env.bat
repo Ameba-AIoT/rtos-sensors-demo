@@ -1,0 +1,1 @@
+call \home\yingchun_chen\ameba-rtos\env.bat 

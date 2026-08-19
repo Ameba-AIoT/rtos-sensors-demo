@@ -2,12 +2,12 @@
 
 ![Platform](https://img.shields.io/badge/platform-RTL8721Dx-blue)
 ![RTOS](https://img.shields.io/badge/RTOS-FreeRTOS-green)
-![Interface](https://img.shields.io/badge/interface-I2C-orange)
+![Interface](https://img.shields.io/badge/interface-I2C%20%7C%20UART-orange)
 ![Status](https://img.shields.io/badge/status-updating-yellow)
 
 A collection of **FreeRTOS sensor demo projects** for the **Ameba RTL8721Dx series SoC**.
 
-This repository brings together multiple **I2C-based sensor examples**, making it easier for developers to access, evaluate, and extend them in one place.
+This repository brings together multiple **sensor examples** (I2C and UART-based), making it easier for developers to access, evaluate, and extend them in one place.
 
 These examples were originally maintained in separate standalone repositories and are now consolidated into a single repository as a standardized demo collection for easier maintenance and reuse.
 
@@ -27,13 +27,14 @@ These examples were originally maintained in separate standalone repositories an
 
 - **EVB purchase links**
   - [🛒 Taobao](https://item.taobao.com/item.htm?id=904981157046)
-  - [📦 Amazon](https://www.amazon.com/-/zh/dp/B0FB33DT2C/)
+
 
 - **Chip information**
-  - [📄 RTL8721Dx product page](https://aiot.realmcu.com/zh/module/rtl8721dx.html)
+  - [📄 RTL8721Dx product page](https://aiot.realmcu.com/zh/product/rtl8721dx.html)
 
 - **Development documents**
   - [📚 I2C documentation ](https://aiot.realmcu.com/zh/latest/rtos/peripherals/i2c/index.html)
+  - [📚 UART documentation ](https://aiot.realmcu.com/zh/latest/rtos/peripherals/uart/index.html)
 
 ---
 
@@ -41,7 +42,7 @@ These examples were originally maintained in separate standalone repositories an
 
 - ✅ Based on **FreeRTOS**
 - ✅ Designed for the **RTL8721Dx series SoC**
-- ✅ Includes multiple **I2C-based sensor examples**
+- ✅ Includes multiple **I2C and UART-based sensor examples**
 - ✅ Each example can be **built, flashed, and run independently**
 - ✅ Each subproject includes its own documentation for quick start
 - ✅ Suitable as a reference for sensor driver porting, I2C debugging, and application development
@@ -50,8 +51,6 @@ These examples were originally maintained in separate standalone repositories an
 
 ## 📂 Demo List
 
-More sensor demos will be added in future updates.
-
 ```text
 .
 ├── i2c_ALS_APDS9960_irq_demo
@@ -59,8 +58,11 @@ More sensor demos will be added in future updates.
 ├── i2c_humiture_HDC1080_demo
 ├── i2c_humiture_SHT3x_demo
 ├── i2c_illuminance_BH1750_demo
+├── i2c_illuminance_veml6040_demo
+├── i2c_illuminance_veml6075_demo
 ├── i2c_proximity_APDS9960_demo
 ├── i2c_proximity_APDS9960_irq_demo
+└── uart_humiture_AHT30_demo
 ```
 
 ### Example Overview
@@ -72,8 +74,11 @@ More sensor demos will be added in future updates.
 | `i2c_humiture_HDC1080_demo` | HDC1080 | Temperature and humidity sensing example | I2C |
 | `i2c_humiture_SHT3x_demo` | SHT3x | Temperature and humidity sensing example | I2C |
 | `i2c_illuminance_BH1750_demo` | BH1750 | Ambient light sensing example | I2C |
+| `i2c_illuminance_veml6040_demo` | VEML6040 | RGBW color illuminance and CCT sensing example | I2C |
+| `i2c_illuminance_veml6075_demo` | VEML6075 | UV index (UVI) sensing example | I2C |
 | `i2c_proximity_APDS9960_demo` | APDS9960 | Proximity sensing example | I2C |
 | `i2c_proximity_APDS9960_irq_demo` | APDS9960 | Proximity sensing interrupt example | I2C |
+| `uart_humiture_AHT30_demo` | AHT30 | Button-triggered temperature and humidity sensing example | UART |
 
 > ⚠️ Hardware wiring, default I2C address, initialization flow, and log output may vary between examples. Please refer to the documentation in each subdirectory for exact details.
 
