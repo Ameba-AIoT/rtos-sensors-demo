@@ -16,3 +16,5 @@ build_*/
 Source/
 
 # ignore submodules end
+.clangd
+.clang-format

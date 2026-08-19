@@ -8,8 +8,8 @@ When the detected proximity value exceeds the configured threshold, the system p
 
 - 📎 Board purchase links:  
   - [🛒 Taobao](https://item.taobao.com/item.htm?id=904981157046)  
-  - [📦 Amazon](https://www.amazon.com/-/zh/dp/B0FB33DT2C/)  
-- 📄 [Chip details](https://aiot.realmcu.com/zh/module/rtl8721dx.html)  
+  
+- 📄 [Chip details](https://aiot.realmcu.com/zh/product/rtl8721dx.html)  
 - 📚 [I2C documentation (Peripheral Manual)](https://aiot.realmcu.com/zh/latest/rtos/peripherals/i2c/index.html)
 
 ---

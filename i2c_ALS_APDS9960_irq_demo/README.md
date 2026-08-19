@@ -8,8 +8,8 @@ The example also reports the current light condition: in a dark environment, it 
 
 - 📎 Purchase links:  
   - [🛒 Taobao](https://item.taobao.com/item.htm?id=904981157046)  
-  - [📦 Amazon](https://www.amazon.com/-/zh/dp/B0FB33DT2C/)  
-- 📄 [Chip Overview](https://aiot.realmcu.com/zh/module/rtl8721dx.html)  
+  
+- 📄 [Chip Overview](https://aiot.realmcu.com/zh/product/rtl8721dx.html)  
 - 📚 [I2C Documentation (Peripheral Manual)](https://aiot.realmcu.com/zh/latest/rtos/peripherals/i2c/index.html)
 
 ---

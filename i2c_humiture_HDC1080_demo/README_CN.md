@@ -7,8 +7,8 @@
 
 - 📎 开发板购买链接：  
   - [🛒 淘宝](https://item.taobao.com/item.htm?id=904981157046)  
-  - [📦 Amazon](https://www.amazon.com/-/zh/dp/B0FB33DT2C/)  
-- 📄 [芯片详情](https://aiot.realmcu.com/zh/module/rtl8721dx.html)
+  
+- 📄 [芯片详情](https://aiot.realmcu.com/zh/product/rtl8721dx.html)
 - 📚 [IIC文档](https://aiot.realmcu.com/zh/latest/rtos/peripherals/i2c/index.html)
 
 
