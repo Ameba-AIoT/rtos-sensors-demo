@@ -203,22 +203,22 @@ int write_mpu6050(uint8_t address, uint8_t data)
 
 void mpu6050_init(void)
 {
-    write_mpu6050(MPU6050_RA_PWR_MGMT_1, 0x00);	         //解除休眠状态
-	write_mpu6050(MPU6050_RA_SMPLRT_DIV , 0x07);	     //陀螺仪采样率，1KHz
-	write_mpu6050(MPU6050_RA_CONFIG , 0x06);	         //低通滤波器的设置，截止频率是1K，带宽是5K
-	write_mpu6050(MPU6050_RA_GYRO_CONFIG, 0x18);         //陀螺仪自检及测量范围，典型值：0x18(不自检，2000deg/s)
-    write_mpu6050(MPU6050_RA_ACCEL_CONFIG,0x00);         //配置加速度传感器工作在2G模式，不自检
+    write_mpu6050(MPU6050_RA_PWR_MGMT_1, 0x00);	         //Release sleep state
+    write_mpu6050(MPU6050_RA_SMPLRT_DIV , 0x07);	 //IMU sampling rate, 1KHz
+    write_mpu6050(MPU6050_RA_CONFIG , 0x06);	         //The setting of the low-pass filter has a cutoff frequency of 1K and a bandwidth of 5K
+    write_mpu6050(MPU6050_RA_GYRO_CONFIG, 0x18);         //Gyroscope self-test and measurement range, typical value: 0x18 (no self-test, 2000deg/s)
+    write_mpu6050(MPU6050_RA_ACCEL_CONFIG,0x00);         //Configure the acceleration sensor to operate in 2G mode without self checking
 }
 
 
 /**
-*量程与灵敏度（LSB/g）对应关系：
+*Corresponding relationship between range and sensitivity (LSB/g)：
 *
 *    AFS_SEL=0（±2g）→ 16384 LSB/g
 *    AFS_SEL=1（±4g）→ 8192 LSB/g
 *    AFS_SEL=2（±8g）→ 4096 LSB/g
 *    AFS_SEL=3（±16g）→ 2048 LSB/g
-*    g(重力加速度倍数) ≈  9.80665 m/s²
+*    g(Multiple of gravitational acceleration) ≈  9.80665 m/s²
 **/
 
 void mpu6050_task(void)
@@ -237,17 +237,17 @@ void mpu6050_task(void)
 	
 	while(1)
 	{
-		_memset(&i2creaddata[0], 0x00, I2C_DATA_LENGTH);
-		read_mpu6050(MPU6050_RA_ACCEL_CONFIG, (char *)&i2creaddata[7], 1, 1);
-		uint8_t afs_sel = (i2creaddata[7] >> 3) & 0x03;            //Bit3~Bit4 AFS_SEL[1:0]
+	_memset(&i2creaddata[0], 0x00, I2C_DATA_LENGTH);
+	read_mpu6050(MPU6050_RA_ACCEL_CONFIG, (char *)&i2creaddata[7], 1, 1);
+	uint8_t afs_sel = (i2creaddata[7] >> 3) & 0x03;            //Bit3~Bit4 AFS_SEL[1:0]
 		
-        read_mpu6050(MPU6050_RA_ACCEL_XOUT_H, (char *)&xyzaccel[0], 6, 1);       // 连续读6字节：XH XL YH YL ZH ZL		
-        int16_t x_accel = ((xyzaccel[0] << 8) | xyzaccel[1]);     //显示X轴加速度;
-        int16_t y_accel = ((xyzaccel[2] << 8) | xyzaccel[3]);     //显示y轴加速度;
-        int16_t z_accel = ((xyzaccel[4] << 8) | xyzaccel[5]);     //显示z轴加速度;
-		RTK_LOGI("mpu6050", "x_accel = %d\n", x_accel);
-		RTK_LOGI("mpu6050", "y_accel = %d\n", y_accel);
-		RTK_LOGI("mpu6050", "z_accel = %d\n", z_accel);
+        read_mpu6050(MPU6050_RA_ACCEL_XOUT_H, (char *)&xyzaccel[0], 6, 1);       // Read 6 bytes continuously：XH XL YH YL ZH ZL		
+        int16_t x_accel = ((xyzaccel[0] << 8) | xyzaccel[1]);     //Display X-axis acceleration;
+        int16_t y_accel = ((xyzaccel[2] << 8) | xyzaccel[3]);     //Display Y-axis acceleration;
+        int16_t z_accel = ((xyzaccel[4] << 8) | xyzaccel[5]);     //Display Z-axis acceleration;
+	RTK_LOGI("mpu6050", "x_accel = %d\n", x_accel);
+	RTK_LOGI("mpu6050", "y_accel = %d\n", y_accel);
+	RTK_LOGI("mpu6050", "z_accel = %d\n", z_accel);
 
         uint16_t lsb_per_g = 16384;
         switch (afs_sel) {
@@ -257,14 +257,14 @@ void mpu6050_task(void)
         case 3: lsb_per_g = 2048;  break; // ±16g
         }
 		
-		float gx = (float)x_accel / lsb_per_g;
+	float gx = (float)x_accel / lsb_per_g;
         float gy = (float)y_accel / lsb_per_g;
         float gz = (float)z_accel / lsb_per_g;
 		
-		snprintf(accel_g, 8, "%.3f", gx);
-		snprintf(accel_g+8 , 8,"%.3f", gy);
-		snprintf(accel_g+16 , 8, "%.3f", gz);				
-		RTK_LOGI("mpu6050", "accel _xg = %s accel _yg = %s accel _zg = %s\n", accel_g, accel_g + 8, accel_g +16);
+	snprintf(accel_g, 8, "%.3f", gx);
+	snprintf(accel_g+8 , 8,"%.3f", gy);
+	snprintf(accel_g+16 , 8, "%.3f", gz);				
+	RTK_LOGI("mpu6050", "accel _xg = %s accel _yg = %s accel _zg = %s\n", accel_g, accel_g + 8, accel_g +16);
 	}
 	
 	rtos_task_delete(NULL);	
