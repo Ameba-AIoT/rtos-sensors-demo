@@ -1,3 +1,5 @@
+* [中文版](./README_CN.md)
+
 # Ameba RTL8721Dx SoC Sensor Example Collection
 
 ![Platform](https://img.shields.io/badge/platform-RTL8721Dx-blue)
@@ -54,6 +56,8 @@ These examples were originally maintained in separate standalone repositories an
 ```text
 .
 ├── i2c_ALS_APDS9960_irq_demo
+├── i2c_IMU_MPU6050_demo
+├── i2c_LIS2DH12_demo
 ├── i2c_gesture_APDS9960_demo
 ├── i2c_humiture_HDC1080_demo
 ├── i2c_humiture_SHT3x_demo
@@ -70,6 +74,8 @@ These examples were originally maintained in separate standalone repositories an
 | Demo Directory | Sensor | Description | Interface |
 |---|---|---|---|
 | `i2c_ALS_APDS9960_irq_demo` | APDS9960 | Ambient light sensing interrupt example | I2C |
+| `i2c_IMU_MPU6050_demo` | MPU6050 | 6-axis IMU (accelerometer / gyroscope / temperature) sensing example | I2C |
+| `i2c_LIS2DH12_demo` | LIS2DH12 | 3-axis accelerometer sensing example | I2C |
 | `i2c_gesture_APDS9960_demo` | APDS9960 | Gesture sensing example | I2C |
 | `i2c_humiture_HDC1080_demo` | HDC1080 | Temperature and humidity sensing example | I2C |
 | `i2c_humiture_SHT3x_demo` | SHT3x | Temperature and humidity sensing example | I2C |
@@ -86,26 +92,25 @@ These examples were originally maintained in separate standalone repositories an
 
 ## 🚀 Quick Start
 
+Each example directory contains its own documentation (`README.md` / `README_CN.md`) with the **complete and authoritative** wiring, power, initialization, and log details for that example — always refer to it for exact specifics. This section only summarizes the **workflow and commands common to all examples**, without repeating details covered by the subproject docs.
+
 ### 1️⃣ Prepare the development environment
 
-Please make sure the **Ameba RTOS SDK** is installed and configured correctly.
-
-To set up the environment, run:
+All examples in this repository require **Ameba RTOS SDK v1.2 or later**. Make sure the SDK is installed correctly and load its environment:
 
 ```bash
 source {sdk}/env.sh
 ```
 
-Replace `{sdk}` with the actual path to `env.sh` in the root directory of the [ameba-rtos SDK](https://github.com/Ameba-AIoT/ameba-rtos).
+Replace `{sdk}` with the actual path to the root of the [ameba-rtos SDK](https://github.com/Ameba-AIoT/ameba-rtos) (use the corresponding `env.bat` on Windows).
 
-> ⚡ It is recommended to check whether your SDK version matches the requirements of the target example.  
-> Please refer to the documentation in each subdirectory for version-specific notes.
+> ⚠️ The `env.sh` / `env.bat` inside each example directory contains the **example author's local absolute SDK path** and is for reference only. Before use, change the path inside it to point to your own SDK location.
 
 ---
 
-### 2️⃣ Select a target example
+### 2️⃣ Select an example and read its documentation
 
-Enter the directory of the example you want to run, for example:
+Enter the target example directory and read its documentation first, especially the **hardware wiring, sensor power requirements, and I2C pin configuration** sections, for example:
 
 ```bash
 cd i2c_humiture_SHT3x_demo
@@ -113,27 +118,28 @@ cd i2c_humiture_SHT3x_demo
 
 ---
 
-### 3️⃣ Read the subproject documentation
+### 3️⃣ Build, flash, and run
 
-Each example includes its own documentation. It is recommended to read it first, especially the following sections:
+All examples use the same commands and flash addresses (replace `COMx` with your actual serial port, e.g. `COM5`):
 
-- Hardware wiring
-- Sensor power requirements
-- I2C pin configuration
-- Build commands
-- Flashing commands
-- Serial log examples
+| Step | Command |
+|---|---|
+| Load environment | `source env.sh` |
+| Build | `ameba.py build -p` |
+| Flash | `ameba.py flash --p COMx --image boot.bin 0x08000000 0x8014000 --image app.bin 0x08014000 0x8200000` |
+| Serial monitor | `ameba.py monitor --port COMx --b 1500000` |
+
+> 💡 Flash image names depend on the SDK version: newer SDKs produce `boot.bin` / `app.bin`, older SDKs produce `km4_boot_all.bin` / `km0_km4_app.bin`. Adjust the file names to match your actual build output.
+> Press the **RST button** on the EVB or power-cycle the board to see the sensor output on the serial terminal.
 
 ---
 
-### 4️⃣ Build, flash, and run
+### 4️⃣ Try it without building (optional)
 
-Inside the target example directory, follow the corresponding documentation to complete:
+Most example directories ship with prebuilt `boot.bin` and `app.bin`, so you can flash and run them without building first — just prefix the image names in the flash command above with `../` (e.g. `../boot.bin`, `../app.bin`).
 
-- Project build
-- Firmware flashing
-- Serial monitoring
-- Runtime verification
+> 🌐 **Web flashing (no command line)**: You can also use the official **web-based flashing tool** to write local firmware files (`boot.bin` / `app.bin`) directly from the browser, without installing the SDK or a command-line environment.
+> 👉 [Official web flashing tool](https://aiot.realmcu.com/zh/resource/web_flash_tool.html)
 
 ---
 
