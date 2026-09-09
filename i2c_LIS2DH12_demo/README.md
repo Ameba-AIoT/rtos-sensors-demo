@@ -6,9 +6,9 @@
 🚀 This example runs on **RTL8721Dx series SoCs** and communicates with a **LIS2DH12 3-axis accelerometer** (CJMCU-LIS2DH12 module) over the **I2C bus**.  
 It demonstrates how to periodically read and print the **X / Y / Z acceleration** values in milli-g (mg).
 
-- 📎 EVB purchase links:  
+- 📎 Purchase links:  
   - [🛒 Taobao](https://item.taobao.com/item.htm?id=904981157046)  
-  - [📦 Amazon](https://www.amazon.com/-/zh/dp/B0FB33DT2C/)  
+
 - 📄 [Chip information](https://aiot.realmcu.com/zh/module/rtl8721dx.html)  
 - 📚 [I2C documentation (peripheral manual)](https://aiot.realmcu.com/zh/latest/rtos/peripherals/i2c/index.html)
 
