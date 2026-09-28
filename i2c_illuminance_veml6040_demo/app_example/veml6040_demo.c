@@ -37,11 +37,11 @@ static void VEML6040_Init(void)
 {
     /* First shut down to reset, then start sensor */
     VEML6040_WriteReg(VEML6040_REG_CONF, VEML6040_DEFAULT_CONFIG | VEML6040_CONF_SD_OFF);
-    DelayMs(10);
+    rtos_time_delay_ms(10);
 
     /* Write working config, enter continuous auto measurement mode */
     VEML6040_WriteReg(VEML6040_REG_CONF, VEML6040_DEFAULT_CONFIG);
-    DelayMs(50);    /* Wait at least one 40ms integration cycle for stable output */
+    rtos_time_delay_ms(50);    /* Wait at least one 40ms integration cycle for stable output */
 }
 
 /**
@@ -192,10 +192,7 @@ void app_illuminance_read(void)
 
     while (1)
     {
-        /* Enter critical section: protect I2C bus operations from other tasks */
-        rtos_critical_enter(RTOS_CRITICAL_DEFAULT);
         VEML6040_GetRGBW(&R, &G, &B, &W);
-        rtos_critical_exit(RTOS_CRITICAL_DEFAULT);
 
         /* Delay 1 second to control sampling frequency */
         rtos_time_delay_ms(1000);

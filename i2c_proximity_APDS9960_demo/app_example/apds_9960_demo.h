@@ -1,5 +1,5 @@
-#ifndef _I2C_DEMO_H_
-#define _I2C_DEMO_H_
+#ifndef _APDS_PROX_POLL_DEMO_H_
+#define _APDS_PROX_POLL_DEMO_H_
 
 #include <stdio.h>
 #include "platform_autoconf.h"
@@ -26,8 +26,11 @@ extern "C"
 
 #define I2C_MASTER_SDA             _PA_31  //SDA
 #define I2C_MASTER_SCL             _PA_30  //SCL
-#define I2C_CLK                    400000   // 400kHz  Fast Mode 400kHz,
+#define I2C_CLK                    400000   // 400kHz  Fast Mode
 #define I2C_0                      0
+
+#define PROX_NEAR_THRESHOLD        150      // Software "approach" threshold
+#define PROX_FAR_THRESHOLD         50       // Software "departure" threshold
 
 /* 7-bit I2C address */
 #define APDS9960_I2C_ADDR          0x39    // Datasheet specifies single 7-bit address 0x39

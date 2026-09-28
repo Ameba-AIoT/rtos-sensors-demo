@@ -6,14 +6,14 @@
  ******************************************************************************/
 #include "mpu6050_demo.h"
 
-I2C_InitTypeDef I2CInitData[2];
-int16_t i2c_target_addr[2];
+static I2C_InitTypeDef I2CInitData[2];
+static int16_t i2c_target_addr[2];
 
-uint8_t i2creaddata[I2C_DATA_LENGTH];
-int8_t xyzaccel[I2C_DATA_LENGTH]; 
-char accel_g[I2C_DATA_LENGTH];
+static uint8_t i2creaddata[I2C_DATA_LENGTH];
+static uint8_t xyzaccel[I2C_DATA_LENGTH];
+static char accel_g[I2C_DATA_LENGTH];
 
-i2c_t i2cmaster;
+static i2c_t i2cmaster;
 
 /**
   * @brief  Initializes the I2C device, include clock/function/I2C registers.
@@ -241,10 +241,10 @@ void mpu6050_task(void)
 	read_mpu6050(MPU6050_RA_ACCEL_CONFIG, (char *)&i2creaddata[7], 1, 1);
 	uint8_t afs_sel = (i2creaddata[7] >> 3) & 0x03;            //Bit3~Bit4 AFS_SEL[1:0]
 		
-        read_mpu6050(MPU6050_RA_ACCEL_XOUT_H, (char *)&xyzaccel[0], 6, 1);       // Read 6 bytes continuously：XH XL YH YL ZH ZL		
-        int16_t x_accel = ((xyzaccel[0] << 8) | xyzaccel[1]);     //Display X-axis acceleration;
-        int16_t y_accel = ((xyzaccel[2] << 8) | xyzaccel[3]);     //Display Y-axis acceleration;
-        int16_t z_accel = ((xyzaccel[4] << 8) | xyzaccel[5]);     //Display Z-axis acceleration;
+        read_mpu6050(MPU6050_RA_ACCEL_XOUT_H, (char *)&xyzaccel[0], 6, 1);       // Read 6 bytes continuously：XH XL YH YL ZH ZL
+        int16_t x_accel = (int16_t)(((uint16_t)xyzaccel[0] << 8) | xyzaccel[1]);     //Display X-axis acceleration;
+        int16_t y_accel = (int16_t)(((uint16_t)xyzaccel[2] << 8) | xyzaccel[3]);     //Display Y-axis acceleration;
+        int16_t z_accel = (int16_t)(((uint16_t)xyzaccel[4] << 8) | xyzaccel[5]);     //Display Z-axis acceleration;
 	RTK_LOGI("mpu6050", "x_accel = %d\n", x_accel);
 	RTK_LOGI("mpu6050", "y_accel = %d\n", y_accel);
 	RTK_LOGI("mpu6050", "z_accel = %d\n", z_accel);
@@ -274,11 +274,9 @@ void mpu6050_task(void)
 	
 int i2c_mpu6050(void)
 {
-	if (rtos_task_create(NULL, "MPU6050 DEMO", (rtos_task_t)mpu6050_task, NULL, (1024), (1)) != RTK_SUCCESS) {
+	if (rtos_task_create(NULL, "MPU6050 DEMO", (rtos_task_t)mpu6050_task, NULL, (4096), (1)) != RTK_SUCCESS) {
 		RTK_LOGI("mpu6050", "Cannot create mpu6050_task demo task\n\r");
 	}
-
-	rtos_sched_start();
 
 	return 0;
 

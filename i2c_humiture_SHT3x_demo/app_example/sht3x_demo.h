@@ -1,5 +1,5 @@
-#ifndef _I2C_DEMO_H_
-#define _I2C_DEMO_H_
+#ifndef _SHT3X_DEMO_H_
+#define _SHT3X_DEMO_H_
 
 #include <stdio.h>
 #include "platform_autoconf.h"
@@ -75,4 +75,4 @@ void            sht3x_task(void *argument);
 #ifdef __cplusplus
 }
 #endif
-#endif /* __SHT3X_MBED_H__ */
+#endif /* _SHT3X_DEMO_H_ */

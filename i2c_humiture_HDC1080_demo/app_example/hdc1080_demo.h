@@ -35,7 +35,7 @@
 
 
 // Function declarations
-void sys_init(void);
+void sensor_sys_init(void);
 
 void HDC1080_WriteReg(uint8_t reg_add, uint16_t reg_dat);
 void HDC1080_ReadData(uint8_t reg_add, uint8_t *read_data, uint8_t num);

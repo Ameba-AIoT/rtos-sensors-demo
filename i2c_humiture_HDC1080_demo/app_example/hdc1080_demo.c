@@ -31,7 +31,7 @@ static void hw_i2c_master_init(
 // HDC1080 initialization: configure measurement mode and resolution
 static void HDC1080_Init(void)
 {
-    DelayMs(20);
+    rtos_time_delay_ms(20);
     uint16_t cfg = 0;
 
     // Configure simultaneous temperature and humidity measurement
@@ -49,7 +49,7 @@ static void HDC1080_Init(void)
  * @brief  System unified initialization entry
  * @return None
  */
-void sys_init(void)
+void sensor_sys_init(void)
 {
     hw_i2c_master_init(I2C_0, MBED_I2C_MTR_SDA, MBED_I2C_MTR_SCL, MBED_I2C_BUS_CLK);
     HDC1080_Init();
@@ -87,7 +87,7 @@ void HDC1080_ReadData(uint8_t reg_add, uint8_t *read_data, uint8_t num)
     uint8_t reg = reg_add;
 
     i2c_write(&i2c_master, HDC1080_ADDR, (const char*)&reg, 1, 0);
-    DelayMs(20);
+    rtos_time_delay_ms(20);
 
     i2c_read(&i2c_master, HDC1080_ADDR, (char*)read_data, num, 1);
 }
@@ -120,9 +120,7 @@ void app_temp_humi_read(void)
     float temp = 0,humi = 0;
     while (1)
     {
-        rtos_critical_enter(RTOS_CRITICAL_DEFAULT);
         HDC1080_Read_TEM_HUM(&temp,&humi);
-        rtos_critical_exit(RTOS_CRITICAL_DEFAULT);
         rtos_time_delay_ms(1000);
     }
 }
