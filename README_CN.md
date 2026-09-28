@@ -7,6 +7,10 @@
 ![Interface](https://img.shields.io/badge/interface-I2C%20%7C%20UART-orange)
 ![Status](https://img.shields.io/badge/status-updating-yellow)
 
+<p align="center">
+  <img src="./rtos-sensors-demo-hero.gif" alt="Ameba RTL8721Dx SoC Sensor Example Collection" width="100%">
+</p>
+
 本仓库是面向 **Ameba RTL8721Dx 系列 SoC** 的 **FreeRTOS 传感器示例工程集合**。
 
 仓库汇集了多个基于 **I2C 和 UART 接口**的**传感器示例**，方便开发者在一处集中获取、评估和扩展这些示例。

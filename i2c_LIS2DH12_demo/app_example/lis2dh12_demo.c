@@ -159,6 +159,5 @@ int example_mbed_i2c_lis2dh12(void)
 		RTK_LOGI(TAG, "Cannot create LIS2DH12 demo task\n");
 	}
 
-	rtos_sched_start();
 	return 0;
 }

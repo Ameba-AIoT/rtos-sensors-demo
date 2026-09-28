@@ -6,8 +6,8 @@
  *  This module is a confidential and proprietary property of RealTek and
  *  possession or use of this module requires written permission of RealTek.
  */
-#ifndef EXAMPLE_LIS2DH12_EXT_H
-#define EXAMPLE_LIS2DH12_EXT_H
+#ifndef _LIS2DH12_DEMO_H_
+#define _LIS2DH12_DEMO_H_
 
 #include "platform_autoconf.h"
 
