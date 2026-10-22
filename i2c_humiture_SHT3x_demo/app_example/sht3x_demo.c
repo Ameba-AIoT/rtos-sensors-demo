@@ -23,9 +23,9 @@ SHT3X_Error_t SHT3X_Init(SHT3X_Handle_t *dev, PinName sda, PinName scl, uint32_t
     dev->addr_7bit = addr_7bit;
 
     // Initialize mbed I2C
-    RTK_LOGI(TAG, "i2c_idx=%x ,I2C addr=0x%02x ,sda=0x%x ,scl=0x%x ,freq=%d \r\n", dev->i2c.i2c_idx, dev->addr_7bit, sda, scl, freq_hz);
     i2c_init(&dev->i2c, sda, scl);
     i2c_frequency(&dev->i2c, freq_hz);
+    RTK_LOGI(TAG, "i2c_idx=%x ,I2C addr=0x%02x ,sda=0x%x ,scl=0x%x ,freq=%d \r\n", dev->i2c.i2c_idx, dev->addr_7bit, sda, scl, freq_hz);
 
     // After power-up, calling SHT3X_Init(address) performs a SoftReset internally
     // Send SoftReset command directly here, then delay 50ms

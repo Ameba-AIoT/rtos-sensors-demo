@@ -258,8 +258,8 @@ void apds9960_demo_task(void)
     RTK_LOGI(TAG, "APDS-9960 init OK\r\n");
     while (1)
     {
-        // Wait for ALS interrupt event
-        if (rtos_sema_take(g_apds_sem, MAX_DELAY_TIME_MS / 10) == 0)
+        // Wait for ALS interrupt event (ATIME=0xDB -> ~100ms integration)
+        if (rtos_sema_take(g_apds_sem, MAX_DELAY_TIME_MS) == RTK_SUCCESS)
         {
             apds9960_read_reg(APDS9960_REG_STATUS, &status);
 
@@ -303,6 +303,7 @@ void apds9960_demo_task(void)
         else
         {
             GPIO_WriteBit(LED2_PIN, 0);
+            gpio_irq_enable(&apds9960_int_gpio); // ISR disabled it on entry; re-arm
         }
     }
     rtos_task_delete(NULL);

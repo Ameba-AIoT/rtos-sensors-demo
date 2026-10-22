@@ -32,9 +32,9 @@
 
 
 // Function declarations
-void sys_init(void);
+void sensor_sys_init(void);
 
-void BH1750_WriteReg(uint8_t reg_add,uint8_t reg_dat);   // Write command
+void BH1750_SendCmd(uint8_t cmd);                        // Send single-byte command
 void BH1750_ReadData(uint8_t reg_add,uint8_t *read_data, uint8_t num); // Read data
 void BH1750_ReadLux(float *illu);                        // Read illuminance
 void app_lightread(void);

@@ -294,6 +294,7 @@ void apds9960_demo_task(void)
              //RTK_LOGI(TAG, "Proximity poll PDATA=%d\r\n", (int)pdata);
              prox_near = false;
              GPIO_WriteBit(LED2_PIN, 0);
+             gpio_irq_enable(&apds9960_int_gpio); // ISR disabled it on entry; re-arm
         }
     }
     rtos_task_delete(NULL);

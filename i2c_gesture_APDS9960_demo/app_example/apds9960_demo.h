@@ -170,7 +170,7 @@ typedef enum
 GestureTypeDef;
 
 // Function declarations
-void sys_init(void);
+void sensor_sys_init(void);
 
 void APDS9960_WriteReg(uint8_t reg_add, uint8_t *reg_dat,uint8_t num); // Write register
 void APDS9960_ReadData(uint8_t reg_add, uint8_t *read_data, uint8_t num); // Read data

@@ -31,16 +31,16 @@ static void hw_i2c_master_init(
 // BH1750 initialization
 static void BH1750_Init(void)
 {
-    BH1750_WriteReg(BH1750_POWER_ON, 0x00);  // 1. Power on
-    BH1750_WriteReg(BH1750_RESET, 0x00);     // 2. Reset
-    DelayMs(180);                            // 3. Wait for stabilization
+    BH1750_SendCmd(BH1750_POWER_ON);  // Power on
+    BH1750_SendCmd(BH1750_RESET);     // Reset
+    rtos_time_delay_ms(180);                      // Wait for stabilization
 }
 
 /**
- * @brief  System unified initialization entry
+ * @brief  BH1750 demo system initialization entry
  * @return None
  */
-void sys_init(void)
+void sensor_sys_init(void)
 {
     // Initialize I2C0: pins + clock
     hw_i2c_master_init(I2C_0, MBED_I2C_MTR_SDA, MBED_I2C_MTR_SCL, MBED_I2C_BUS_CLK);
@@ -63,16 +63,10 @@ static void float_to_str(float f, uint32_t *int_part, uint32_t *dec_part)
     }
 }
 
-// BH1750 write command/data
-void BH1750_WriteReg(uint8_t reg_add, uint8_t reg_dat)
+// BH1750 is a command-only device: each I2C transaction is a single command byte
+void BH1750_SendCmd(uint8_t cmd)
 {
-    uint8_t buf[2];
-
-    buf[0] = reg_add;  // Command/register address
-    buf[1] = reg_dat;  // Data
-
-    // I2C send 2 bytes
-    i2c_write(&i2c_master, BH1750_ADDR, (const char*)buf, 2, 1);
+    i2c_write(&i2c_master, BH1750_ADDR, (const char *)&cmd, 1, 1);
 }
 
 // BH1750 read data
@@ -80,9 +74,9 @@ void BH1750_ReadData(uint8_t reg_add, uint8_t *read_data, uint8_t num)
 {
     uint8_t reg = reg_add;
 
-    // 1. Send register address, no stop bit (keep bus)
+    // 1. Send measure command, no stop bit (keep bus)
     i2c_write(&i2c_master, BH1750_ADDR, (const char*)&reg, 1, 0);
-    DelayMs(24);  // Wait for measurement completion
+    rtos_time_delay_ms(24);  // Wait for measurement completion
     // 2. Read data, send stop bit
     i2c_read(&i2c_master, BH1750_ADDR, (char*)read_data, num, 1);
 
@@ -115,12 +109,8 @@ void app_lightread(void)
     float illu = 0;
     while (1)
     {
-        // Enter critical section to prevent task interruption
-        rtos_critical_enter(RTOS_CRITICAL_DEFAULT);
         // Read illuminance
         BH1750_ReadLux(&illu);
-        // Exit critical section
-        rtos_critical_exit(RTOS_CRITICAL_DEFAULT);
         // Delay 1s
         rtos_time_delay_ms(1000);
     }

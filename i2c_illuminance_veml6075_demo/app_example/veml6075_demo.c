@@ -108,7 +108,7 @@ int VEML6075_ReadReg(uint8_t reg_addr, uint16_t *reg_dat)
  */
 int VEML6075_Init(void)
 {
-    DelayMs(10);
+    rtos_time_delay_ms(10);
 
     /* Read device ID, low byte should be 0x26 */
     uint16_t id = 0;
@@ -122,13 +122,13 @@ int VEML6075_Init(void)
 
     /* First shut down sensor, then write config (standard init flow) */
     VEML6075_WriteReg(VEML6075_REG_CONF, VEML6075_CFG_SD);
-    DelayMs(5);
+    rtos_time_delay_ms(5);
 
     /* Write working config: UV_IT=100ms, UV_AF=0 (continuous), HD=0 (normal), SD=0 (enable) */
     uint16_t cfg = VEML6075_IT_100MS;
     VEML6075_WriteReg(VEML6075_REG_CONF, cfg);
 
-    DelayMs(10);
+    rtos_time_delay_ms(10);
     return 0;
 }
 
@@ -164,7 +164,7 @@ void VEML6075_ReadUV(float *uva, float *uvb, float *uvi)
     uint16_t raw_uva = 0, raw_uvb = 0, raw_uvd = 0, comp1 = 0, comp2 = 0;
 
     /* Wait for current integration cycle to finish (100ms + 10ms margin) */
-    DelayMs(110);
+    rtos_time_delay_ms(110);
 
     VEML6075_ReadReg(VEML6075_REG_UVA,     &raw_uva);  /* UVA raw count    */
     VEML6075_ReadReg(VEML6075_REG_DARK,    &raw_uvd);  /* Dark current cnt */
@@ -224,10 +224,7 @@ void app_uv_read(void)
 
     while (1)
     {
-        /* Enter critical section: protect I2C bus operations from other tasks */
-        rtos_critical_enter(RTOS_CRITICAL_DEFAULT);
         VEML6075_ReadUV(&uva, &uvb, &uvi);
-        rtos_critical_exit(RTOS_CRITICAL_DEFAULT);
 
         /* Delay 1 second to control sampling frequency */
         rtos_time_delay_ms(1000);

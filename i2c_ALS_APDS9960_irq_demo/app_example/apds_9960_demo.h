@@ -1,5 +1,5 @@
-#ifndef _I2C_DEMO_H_
-#define _I2C_DEMO_H_
+#ifndef _APDS_ALS_IRQ_DEMO_H_
+#define _APDS_ALS_IRQ_DEMO_H_
 
 #include <stdio.h>
 #include "platform_autoconf.h"
@@ -25,7 +25,7 @@
 #define APDS9960_INT_PIN           _PA_29   //interrupt GPIO pin
 #define I2C_MASTER_SDA             _PA_31   //SDA
 #define I2C_MASTER_SCL             _PA_30   //SCL
-#define I2C_CLK                    100000   // 100kHz, Fast Mode 400kHz
+#define I2C_CLK                    400000   // 400kHz, Fast Mode
 #define I2C_0                      0
 #define MAX_DELAY_TIME_MS          200
 

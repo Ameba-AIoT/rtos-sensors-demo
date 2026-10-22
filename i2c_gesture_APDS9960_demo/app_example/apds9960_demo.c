@@ -43,9 +43,9 @@ static void APDS9960_Init(void)
         cfg1_val = APDS9960_CFG1_LOWPOW ;
 
     APDS9960_WriteReg(APDS9960_REG_ENABLE, &enable_val, 1);  // Disable all functions
-    DelayMs(100);                                            // Wait for chip to stabilize
+    rtos_time_delay_ms(100);                                            // Wait for chip to stabilize
     APDS9960_WriteReg(APDS9960_ADC_ATIME, &adc_time, 1);     // Configure ADC integration time
-    APDS9960_WriteReg(APDS9960_ADC_ATIME, &wait_time, 1);    // Configure wait time
+    APDS9960_WriteReg(APDS9960_REG_WTIME, &wait_time, 1);    // Configure wait time
     APDS9960_WriteReg(APDS9960_REG_CONFIG1, &cfg1_val, 1);   // Low power mode configuration
 
     // ==================== 2. Proximity detection configuration ====================
@@ -106,7 +106,7 @@ static void APDS9960_Init(void)
     uint8_t gexth = 0x10;    // Exit threshold
     APDS9960_WriteReg(APDS9960_REG_GPENTH, &gpenth, 1);
     APDS9960_WriteReg(APDS9960_REG_GEXTH, &gexth, 1);
-    DelayMs(300);  // Wait for gesture module to stabilize
+    rtos_time_delay_ms(300);  // Wait for gesture module to stabilize
 
     // ==================== 5. Enable all operating functions ====================
     enable_val |= APDS9960_EN_PON;        // Chip power on
@@ -114,14 +114,14 @@ static void APDS9960_Init(void)
     enable_val |= APDS9960_EN_PEN;        // Proximity detection enable
     enable_val |= APDS9960_EN_GEN;        // Gesture detection enable
     APDS9960_WriteReg(APDS9960_REG_ENABLE, &enable_val, 1);
-    DelayMs(1000);  // Wait for chip to fully power up and stabilize
+    rtos_time_delay_ms(1000);  // Wait for chip to fully power up and stabilize
 }
 
 /**
  * @brief  System unified initialization entry
  * @return None
  */
-void sys_init(void)
+void sensor_sys_init(void)
 {
     // Initialize I2C0: pins + clock
     hw_i2c_master_init(I2C_0, MBED_I2C_MTR_SDA, MBED_I2C_MTR_SCL, MBED_I2C_BUS_CLK);
@@ -159,7 +159,7 @@ void APDS9960_ReadData(uint8_t reg_add, uint8_t *read_data, uint8_t num)
 
     // 1. First send register address without stop bit, keep bus ownership
     i2c_write(&i2c_master, APDS9960_ADDR, (const char*)&reg, 1, 0);
-    DelayMs(5);  // Wait for chip response
+    rtos_time_delay_ms(5);  // Wait for chip response
     // 2. Read target data, send stop bit to end communication
     i2c_read(&i2c_master,APDS9960_ADDR, (char*)read_data, num, 1);
 }

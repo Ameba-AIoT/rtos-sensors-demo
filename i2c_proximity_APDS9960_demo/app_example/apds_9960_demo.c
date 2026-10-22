@@ -193,7 +193,7 @@ void apds9960_demo_task(void *argument)
             RTK_LOGE(TAG, "Proximity read failed, status=%d\r\n", st);
         }
 
-        if (prox > 200)
+        if (prox >= PROX_NEAR_THRESHOLD)
         {
             RTK_LOGI(TAG, "===========>Too close!\r\n");
             gpio_toggle((u32)LED2_PIN, 200);

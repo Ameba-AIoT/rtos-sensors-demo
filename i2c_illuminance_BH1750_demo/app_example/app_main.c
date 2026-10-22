@@ -4,7 +4,7 @@
 
 void app_example(void)
 {
-    sys_init();
+    sensor_sys_init();
     RTK_LOGI("BH1750", "bh1750_task creat!\r\n");
     // Create light reading task
     if (rtos_task_create(NULL, "app_lightread", (rtos_task_t)app_lightread, NULL, (3072), (1)) != RTK_SUCCESS)
