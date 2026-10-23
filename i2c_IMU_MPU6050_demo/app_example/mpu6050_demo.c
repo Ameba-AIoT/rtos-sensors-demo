@@ -69,6 +69,14 @@ void i2c_StructInit(i2c_t *obj, uint32_t I2c_index, uint8_t sda, uint8_t scl, ui
 
 }
 
+void I2C_init(void)
+{
+       RCC_PeriphClockCmd(APBPeriph_I2C0, APBPeriph_I2C0_CLOCK, ENABLE);
+       
+       i2c_StructInit(&i2cmaster, I2C_ID, I2C_MTR_SDA, I2C_MTR_SCL, I2C_MASTER_MODE);
+       I2C_Init(i2cmaster.I2Cx, &I2CInitData[i2cmaster.i2c_idx]);
+       I2C_Cmd(i2cmaster.I2Cx, ENABLE);
+}
 
 /**
   * @brief  I2C master restart after all bytes are sent.
@@ -223,13 +231,7 @@ void mpu6050_init(void)
 
 void mpu6050_task(void)
 {
-	RCC_PeriphClockCmd(APBPeriph_I2C0, APBPeriph_I2C0_CLOCK, ENABLE);
-	
-	
-	i2c_StructInit(&i2cmaster, I2C_ID, I2C_MTR_SDA, I2C_MTR_SCL, I2C_MASTER_MODE);
-	I2C_Init(i2cmaster.I2Cx, &I2CInitData[i2cmaster.i2c_idx]);
-	I2C_Cmd(i2cmaster.I2Cx, ENABLE);
-	
+	I2C_init();
 	mpu6050_init();
 	rtos_time_delay_ms(50);
 	read_mpu6050(MPU6050_RA_WHO_AM_I,(char *)&i2creaddata[0],1,1);
